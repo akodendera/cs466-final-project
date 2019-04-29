@@ -1,15 +1,10 @@
 import pprint
-from Bio import SeqIO
-import pandas as pd
-from tabulate import tabulate
 import logging
 from multiprocessing import Process, Manager
-import os
-import threading
-import time
-from math import ceil
+from Bio import SeqIO
+import pandas as pd
 
-pp = pprint.PrettyPrinter(indent=4)
+PP = pprint.PrettyPrinter(indent=4)
 
 
 class DeBruijn:
@@ -20,48 +15,59 @@ class DeBruijn:
         self.shared_dict = self.mgr.dict()
         self.thread_arr = [None] * n_threads
         self.initialize_logs()
-        self.initialize_dataframes()
+        self.initialize_dataframes([])
         self.import_file()
 
     def initialize_logs(self):
+        """ Initialize the logging format """
         FORMAT = "%(asctime)s: %(message)s"
-        logging.basicConfig(format=FORMAT, level=logging.INFO, datefmt="%H:%M:%S")
+        logging.basicConfig(format=FORMAT, level=logging.INFO,
+                            datefmt="%H:%M:%S")
         logging.info("Logging initilazied")
 
-    def initialize_dataframes(self):
-        self.df = pd.DataFrame()
+    def initialize_dataframes(self, row_arr):
+        """ Initialize the dataframe from a list"""
+        self.df = pd.DataFrame(row_arr)
 
     def import_file(self):
-        split_arr = self.split_array()
-        logging.info("split into " + repr(len(split_arr)))
+        """ Parallelly import the file into a pandas dataframe """
+        split_arr = self.split_into_chunks()
+        logging.info("split into %s", repr(len(split_arr)))
+        # call worker threads
         for i in xrange(self.N_THREADS):
-            self.thread_arr[i] = Process(target=self.append_parallel, args=(i, split_arr[i], self.shared_dict))
+            self.thread_arr[i] = Process(target=self.append_parallel,
+                                         args=(i, split_arr[i]))
             self.thread_arr[i].start()
-            logging.info("starting thread " + repr(i))
+            logging.info("starting thread %s", repr(i))
 
+        # join worker threads
         for i in xrange(self.N_THREADS):
             self.thread_arr[i].join()
-            logging.info("joining thread " + repr(i))
+            logging.info("joining thread %s", repr(i))
 
-        for i in xrange(self.N_THREADS):
-            self.df = self.df.append(self.shared_dict[i])
+        # merge the dataframes that the worker threads created
+        # in a serial manner
+        self.df = pd.concat(self.shared_dict.values(), axis=0, join='outer',
+                            ignore_index=True)
 
-    def append_parallel(self, index, arr, parent_shared_dict):
-        # MARK: log length
-        # logging.info("length of chunk for thread " + repr(index) + " is " + repr(len(arr)))
-        progress_counter = 0
+    def append_parallel(self, index, arr):
+        """
+        Parallell worker function that adds to local dict
+        and copies to shared dict
+        """
+        row_arr = []
         for record in arr:
-            self.df = self.df.append({
+            current_dict = {
                 'sequence_id': record.id,
                 'sequence': str(record.seq)
-            }, ignore_index=True)
-            # MARK: progress log
-            # if(progress_counter % (len(arr) / 10) == 0):
-            #     logging.info("thread " + repr(index) + " is " + repr(int(ceil(100 * float(progress_counter) / len(arr)))) + "% done")
-            # progress_counter += 1
-        parent_shared_dict[index] = self.df
+            }
+            row_arr.append(current_dict)
 
-    def split_array(self):
+        self.initialize_dataframes(row_arr)
+        self.shared_dict[index] = self.df
+
+    def split_into_chunks(self):
+        """ Split the SeqIO generator into N_THREADS chunks """
         split_arr = []
         split_arr_index = 0
         current_arr = []
@@ -78,9 +84,11 @@ class DeBruijn:
             else:
                 current_arr.append(v)
         # When the number of thread requested is 1 then it will
-        # not be appended in a for-loop
+        # not be appended in the above for-loop
         if not split_arr:
             split_arr = [current_arr]
+        elif current_arr:
+            split_arr[len(split_arr) - 1].extend(current_arr)
         return split_arr
 
 
