@@ -1,9 +1,10 @@
 # from graphviz import Digraph
 
 class DebruijinGraph:
-    def __init__(self):
+    def __init__(self, sequence, k):
         self.nodes = set()
         self.edges = set()  # directed set of tuples (source, destination)
+        self.initializeDebruijinGraph(sequence, k)
 
     def addNode(self, n):
         self.nodes.add(n.lower())
@@ -40,6 +41,9 @@ class DebruijinGraph:
 
     def printWarning(self, s):
         print("Warning: {}".format(s))
+
+
+
 
 
 # if __name__ == "__main__":
