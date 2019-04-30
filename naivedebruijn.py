@@ -1,16 +1,3 @@
-def getkmerList(sequence, k):
-    merList = []
-    for x in range(len(sequence)-k+1):
-        merList.append(sequence[x:x+k])
-    return merList
-
-
-def getLeftRightMers(s):
-    return s[:len(s)-1], s[1:]
-
-
-def printWarning(s):
-    print("Warning: {}".format(s))
 
 
 class dirGraph:
@@ -36,13 +23,27 @@ class dirGraph:
                     edgeList += d + ", "
             print("node: {} edges: {}".format(n, repr(edgeList)))
 
+    def initializeDebruijinGraph(self, sequence, k):
+        mers = self.getkmerList(sequence, k)
+        for m in mers:
+            lmer, rmer = self.getLeftRightMers(m)
+            self.addEdge(lmer, rmer)
+        
+    def getkmerList(self, sequence, k):
+        merList = []
+        for x in range(len(sequence)-k+1):
+            merList.append(sequence[x:x+k])
+        return merList
 
-def makeDebruijinGraph(sequence, k):
-    g = dirGraph()
-    mers = getkmerList(sequence, k)
-    for m in mers:
-        lmer, rmer = getLeftRightMers(m)
-        g.addEdge(lmer, rmer)
-    return g
+    def getLeftRightMers(self, s):
+        return s[:len(s)-1], s[1:]
+
+    def printWarning(self, s):
+        print("Warning: {}".format(s))
+
 
 if __name__ == "__main__":
+    a = "aaaabcdefghijk"
+    g = dirGraph()
+    g.initializeDebruijinGraph(a, 3)
+    g.printGraph()

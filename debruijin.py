@@ -17,6 +17,7 @@ class DeBruijn:
         self.initialize_logs()
         self.initialize_dataframes([])
         self.import_file()
+        self.graph = dirGraph()
 
     def initialize_logs(self):
         """ Initialize the logging format """
