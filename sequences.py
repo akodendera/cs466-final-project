@@ -7,17 +7,17 @@ import pandas as pd
 PP = pprint.PrettyPrinter(indent=4)
 
 
-class DeBruijn:
+class Sequences:
     def __init__(self, n_threads, filename):
         self.FILENAME = filename
         self.N_THREADS = n_threads
         self.mgr = Manager()
+        self.df = None
         self.shared_dict = self.mgr.dict()
         self.thread_arr = [None] * n_threads
         self.initialize_logs()
         self.initialize_dataframes([])
         self.import_file()
-        self.graph = dirGraph()
 
     def initialize_logs(self):
         """ Initialize the logging format """
@@ -91,7 +91,6 @@ class DeBruijn:
         elif current_arr:
             split_arr[len(split_arr) - 1].extend(current_arr)
         return split_arr
-
 
 if __name__ == "__main__":
     N_THREADS = 20

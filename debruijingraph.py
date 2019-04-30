@@ -1,6 +1,6 @@
+# from graphviz import Digraph
 
-
-class dirGraph:
+class DebruijinGraph:
     def __init__(self):
         self.nodes = set()
         self.edges = set()  # directed set of tuples (source, destination)
@@ -42,8 +42,4 @@ class dirGraph:
         print("Warning: {}".format(s))
 
 
-if __name__ == "__main__":
-    a = "aaaabcdefghijk"
-    g = dirGraph()
-    g.initializeDebruijinGraph(a, 3)
-    g.printGraph()
+# if __name__ == "__main__":
