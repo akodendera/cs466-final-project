@@ -91,6 +91,7 @@ class DeBruijn:
             split_arr[len(split_arr) - 1].extend(current_arr)
         return split_arr
 
+
 if __name__ == "__main__":
     N_THREADS = 20
     FILENAME = 'Chelonoidis_abingdonii.ASM359739v1.pep.abinitio.fa'
