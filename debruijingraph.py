@@ -1,10 +1,13 @@
 # from graphviz import Digraph
 
+
 class DebruijinGraph:
     def __init__(self, sequence, k):
         self.nodes = set()
         self.edges = set()  # directed set of tuples (source, destination)
         self.initializeDebruijinGraph(sequence, k)
+        self.naive_eulerian_path = None
+        self.smart_eulerian_path = None
 
     def addNode(self, n):
         self.nodes.add(n.lower())
@@ -42,8 +45,46 @@ class DebruijinGraph:
     def printWarning(self, s):
         print("Warning: {}".format(s))
 
+    def get_overlap(self, left, right):
+        score = 0
+        for l, r in zip(reversed(left), right):
+            if(l == r):
+                score += 1
+        return score
 
+    def find_naive_eulerian_path(self):
+        """ find the eulerian path using a naive algorithm """
+        path = ""
+        merged_nodes = set()
+        for i in self.nodes:
+            merged_nodes.add(i)
 
+        while(len(merged_nodes) != 0):
+            current_node = merged_node.pop()
+            max_overlap_score = -1
+            max_overlap_node = None
+            for i in merged_nodes:
+                left_overlap = self.get_overlap(i, current_node)
+                right_overlap = self.get_overlap(current_node, i)
+                left_overlap_score = left_overlap[0]
+                right_overlap_score = right_overlap[0]
+                if(left_overlap_score < right_overlap_score):
+                    max_overlap_score = right_overlap_score
+                    max_overlap_node = (i, current_node)
+                else:
+                    max_overlap_score = left_overlap_score
+                    max_overlap_node = (current_node, i)
 
+            merged_nodes.remove(max_overlap_node[0])
+            merged_nodes.remove(max_overlap_node[1])
+            merged_nodes.add(max_overlap_node[0][:len(max_overlap_node[0]) - max_overlap_score]
+                             + max_overlap_node[1][max_overlap_score:])
+
+        self.naive_eulerian_path = path
+
+    def find_smart_eulerian_path(self):
+        """ find the eulerian path using a smart algorithm """
+        path = ""
+        self.smart_eulerian_path = path
 
 # if __name__ == "__main__":
