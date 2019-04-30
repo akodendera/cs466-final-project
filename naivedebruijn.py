@@ -30,7 +30,6 @@ class dirGraph:
 
     def printGraph(self):
         for n in self.nodes:
-            print(n)
             edgeList = ""
             for s, d in self.edges:
                 if s == n:
@@ -47,6 +46,3 @@ def makeDebruijinGraph(sequence, k):
     return g
 
 if __name__ == "__main__":
-    s = "abcdefgcdadem"
-    g = makeDebruijinGraph(s, 3)
-    g.printGraph()
