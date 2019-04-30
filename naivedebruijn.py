@@ -23,13 +23,9 @@ class dirGraph:
 
     def addEdge(self, sourceNode, destinationNode):
         if sourceNode not in self.nodes:
-            self.nodes.add(sourceNode)
-            # printWarning("adding edge where source node not in graph. \
-                          # Adding node: " + sourceNode + " to graph")
+            self.addNode(sourceNode)
         if destinationNode not in self.nodes:
-            self.nodes.add(destinationNode)
-            # printWarning("adding edge where destination node not in graph. \
-                          # Adding node: " + destinationNode + " to graph")
+            self.addNode(destinationNode)
         self.edges.add((sourceNode.lower(), destinationNode.lower()))
 
     def printGraph(self):
