@@ -13,17 +13,16 @@ def getGraphList(seq, k):
     thread_arr = [None] * N_THREADS
     mgr = Manager()
     shared_dict = mgr.dict()
-    shared_dict["df"] = seq.df
     df_size = seq.df.shape[0]
     df_size = 1000
     for i in xrange(N_THREADS):
         start, end = findWorkerThreadIndices(i, df_size)
-        thread_arr[i] = Process(target=makeGraphs, args=(i, start, end, k, shared_dict))
+        thread_arr[i] = Process(target=makeGraphs, args=(i, start, end, k, seq.df, shared_dict))
         thread_arr[i].start()
-        logging.info("starting thread %s", repr(i))
+        # logging.info("starting thread %s", repr(i))
     for i in xrange(N_THREADS):
         thread_arr[i].join()
-        logging.info("joining thread %s", repr(i))
+        # logging.info("joining thread %s", repr(i))
     for i in xrange(N_THREADS):
         graphs.extend(shared_dict[i])
     return graphs
@@ -41,10 +40,10 @@ def makeGraphsTemp(threadNum, start, end, k, shared_dict):
         graphList.append("abbas")
     shared_dict[threadNum] = graphList
 
-def makeGraphs(threadNum, start, end, k, shared_dict):
+def makeGraphs(threadNum, start, end, k, df, shared_dict):
     graphList = []
     for i in range(start, end):
-        s = shared_dict["df"]['sequence'].iloc[i]
+        s = df['sequence'].iloc[i]
         graphList.append(DebruijinGraph(s, k))
     shared_dict[threadNum] = graphList 
 
@@ -57,16 +56,6 @@ def getGraphList_noParallel(seq, k):
         graphs.append(DebruijinGraph(s, k))
     return graphs
 
-def getGraphList_noParallel(seq, k):
-    df_size = seq.df.shape[0]
-    graphs = []
-    for i in range(df_size):
-        s = seq["df"]['sequence'].iloc[i]
-        graphs.append(DebruijinGraph(s, k))
-    return graphs
-
-# N_THREADS = 4
-# FILENAME = 'Chelonoidis_abingdonii.ASM359739v1.pep.abinitio.fa'
 # debroin = Sequences(N_THREADS, FILENAME)
 # print(debroin.df.shape[0])
 
@@ -74,20 +63,50 @@ def getGraphList_noParallel(seq, k):
 # threeMerGraphList = getGraphList_noParallel(debroin, 3)
 # print(len(threeMerGraphList))
 
-s3 = "abccde"
-g3 = DebruijinGraph(s3, 4)
-g3.printGraph()
 
-g3.find_naive_eulerian_path()
-print("finding the eulerian path of {} using a naive greedy algorithm".format(s3))
-print(repr(g3.naive_eulerian_path))
+if __name__ == "__main__":
+    N_THREADS = 20
+    FILENAME = 'Chelonoidis_abingdonii.ASM359739v1.pep.abinitio.fa'
+    SEQ = Sequences(N_THREADS, FILENAME)
 
-s4 = "0011101000"
-g4 = DebruijinGraph(s4, 3)
-g4.printGraph()
+    S3 = "abccde"
+    G3 = DebruijinGraph(S3, 5)
+    SEQ.logger.info("finding the eulerian path of %s using a naive greedy algorithm", S3)
+    G3.find_naive_eulerian_path()
+    SEQ.logger.info("completed")
+    SEQ.logger.info("path is %s", G3.naive_eulerian_path)
+    SEQ.logger.info("finding the eulerian path of %s using a smart O(V + E) algorithm", S3)
+    G3.find_smart_eulerian_path()
+    SEQ.logger.info("completed")
+    SEQ.logger.info("path is %s", G3.smart_eulerian_path)
 
-g4.find_naive_eulerian_path()
-print("finding the eulerian path of {} using a naive greedy algorithm".format(s4))
-print(repr(g4.naive_eulerian_path))
+    S4 = "0011101000"
+    G4 = DebruijinGraph(S4, 3)
+    SEQ.logger.info("finding the eulerian path of %s using a naive greedy algorithm", S4)
+    G4.find_naive_eulerian_path()
+    SEQ.logger.info("completed")
+    SEQ.logger.info("path is %s", G4.naive_eulerian_path)
+    SEQ.logger.info("finding the eulerian path of %s using a smart O(V + E) algorithm", S4)
+    G4.find_smart_eulerian_path()
+    SEQ.logger.info("completed")
+    SEQ.logger.info("path is %s", G4.smart_eulerian_path)
 
+    K = 30
+    SEQ.logger.info("build %s-mer graph", K)
+    graph_list = getGraphList(SEQ, K)
+    # MARK: debug 
+    # graph_list = []
 
+    for counter, i in enumerate(graph_list):
+        cur_seq = i.sequence.lower()
+        # SEQ.logger.info("finding the eulerian path of %s using a smart O(V + E) algorithm", cur_seq)
+        i.find_smart_eulerian_path()
+        # SEQ.logger.info("completed")
+        cur_path = i.smart_eulerian_path.lower()
+        # SEQ.logger.info("path is %s", cur_path)
+        if(cur_path != cur_seq):
+            print(counter)
+            SEQ.logger.error("seq  in %s", cur_seq)
+            SEQ.logger.error("path is %s", cur_path)
+            SEQ.logger.error("the sequence and path differ")
+            exit(-1)

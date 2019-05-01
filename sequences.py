@@ -9,6 +9,7 @@ PP = pprint.PrettyPrinter(indent=4)
 
 class Sequences:
     def __init__(self, n_threads, filename):
+        self.logger = logging
         self.FILENAME = filename
         self.N_THREADS = n_threads
         self.mgr = Manager()
@@ -20,31 +21,31 @@ class Sequences:
         self.import_file()
 
     def initialize_logs(self):
-        """ Initialize the logging format """
+        """ Initialize the logger format """
         FORMAT = "%(asctime)s: %(message)s"
-        logging.basicConfig(format=FORMAT, level=logging.INFO,
+        self.logger.basicConfig(format=FORMAT, level=logging.INFO,
                             datefmt="%H:%M:%S")
-        logging.info("Logging initilazied")
+        self.logger.info("Logging initialized")
 
     def initialize_dataframes(self, row_arr):
         """ Initialize the dataframe from a list"""
         self.df = pd.DataFrame(row_arr)
 
     def import_file(self):
-        """ Parallelly import the file into a pandas dataframe """
+        """ Parallely import the file into a pandas dataframe """
         split_arr = self.split_into_chunks()
-        logging.info("split into %s", repr(len(split_arr)))
+        self.logger.info("split into %s", repr(len(split_arr)))
         # call worker threads
         for i in xrange(self.N_THREADS):
             self.thread_arr[i] = Process(target=self.append_parallel,
                                          args=(i, split_arr[i]))
             self.thread_arr[i].start()
-            # logging.info("starting thread %s", repr(i))
+            # self.logger.info("starting thread %s", repr(i))
 
         # join worker threads
         for i in xrange(self.N_THREADS):
             self.thread_arr[i].join()
-            # logging.info("joining thread %s", repr(i))
+            # self.logger.info("joining thread %s", repr(i))
 
         # merge the dataframes that the worker threads created
         # in a serial manner
@@ -53,7 +54,7 @@ class Sequences:
 
     def append_parallel(self, index, arr):
         """
-        Parallell worker function that adds to local dict
+        Parallel worker function that adds to local dict
         and copies to shared dict
         """
         row_arr = []
@@ -91,9 +92,3 @@ class Sequences:
         elif current_arr:
             split_arr[len(split_arr) - 1].extend(current_arr)
         return split_arr
-
-if __name__ == "__main__":
-    N_THREADS = 20
-    FILENAME = 'Chelonoidis_abingdonii.ASM359739v1.pep.abinitio.fa'
-    debroin = DeBruijn(N_THREADS, FILENAME)
-    print(debroin.df.shape)

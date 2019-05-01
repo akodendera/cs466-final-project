@@ -35,7 +35,7 @@ class DebruijinGraph:
         for m in mers:
             lmer, rmer = self.getLeftRightMers(m)
             self.addEdge(lmer, rmer)
-        
+
     def getkmerList(self, sequence, k):
         merList = []
         for x in range(len(sequence)-k+1):
@@ -134,6 +134,52 @@ class DebruijinGraph:
 
     def find_smart_eulerian_path(self):
         """ find the eulerian path using a smart algorithm """
-        path = ""
-        self.smart_eulerian_path = path
+        path_nodes = []
+        path_edges = dict()
+        for i in self.nodes:
+            path_nodes.append(i)
+        for i in self.edges:
+            if(i[0] in path_edges):
+                path_edges[i[0]].append(i[1])
+            else:
+                path_edges[i[0]] = [i[1]]
 
+        starting_vertex_candidate = []
+        for i in path_nodes:
+            outgoing_edges = 0
+            incoming_edges = 0
+
+            if(i in path_edges):
+                outgoing_edges = len(path_edges[i])
+            for j in path_edges:
+                for k in path_edges[j]:
+                    if(i == k):
+                        incoming_edges += 1
+            if((outgoing_edges - incoming_edges) > 0 and
+                (outgoing_edges - incoming_edges) % 2 != 0):
+                for j in path_edges[i]:
+                    starting_vertex_candidate.append(i)
+        if(not starting_vertex_candidate):
+            for i in path_nodes:
+                starting_vertex_candidate.append(i)
+
+        current_path = []
+        current_vertex = starting_vertex_candidate.pop()
+        not_visited = []
+        not_visited.append(current_vertex)
+        while(not_visited):
+            if(current_vertex in path_edges):
+                not_visited.append(current_vertex)
+                new_vertex = path_edges[current_vertex].pop()
+                if(current_vertex in path_edges and len(path_edges[current_vertex]) == 0):
+                    path_edges.pop(current_vertex)
+                current_vertex = new_vertex
+            else:
+                current_path.append(current_vertex)
+                current_vertex = not_visited.pop()
+
+        merged_node = ""
+        for i in reversed(current_path):
+            merged_node += i[0]
+        merged_node += current_path[0][1:]
+        self.smart_eulerian_path = merged_node
