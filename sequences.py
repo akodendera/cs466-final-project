@@ -24,7 +24,7 @@ class Sequences:
         FORMAT = "%(asctime)s: %(message)s"
         logging.basicConfig(format=FORMAT, level=logging.INFO,
                             datefmt="%H:%M:%S")
-        logging.info("Logging initilazied")
+        logging.info("Logging initialized")
 
     def initialize_dataframes(self, row_arr):
         """ Initialize the dataframe from a list"""

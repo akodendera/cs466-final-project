@@ -1,4 +1,4 @@
-# from graphviz import Digraph
+import networkx as nx
 from random import shuffle
 from multiprocessing import Process, Manager
 import logging
@@ -8,7 +8,8 @@ from sequences import Sequences
 class DebruijinGraph:
     def __init__(self, sequence, k):
         self.nodes = set()
-        self.edges = set()  # directed set of tuples (source, destination)
+        self.edgeSet = set()  # directed set of tuples (source, destination)
+        self.adjDict = {}
         self.read_size = k
         self.sequence = sequence
         self.initializeDebruijinGraph(sequence, k)
@@ -17,21 +18,25 @@ class DebruijinGraph:
 
     def addNode(self, n):
         self.nodes.add(n.lower())
+        if sourceNode.lower() not in self.adjDict:
+            self.adjDict[sourceNode.lower()] = []
 
     def addEdge(self, sourceNode, destinationNode):
-        if sourceNode not in self.nodes:
-            self.addNode(sourceNode)
-        if destinationNode not in self.nodes:
-            self.addNode(destinationNode)
-        self.edges.add((sourceNode.lower(), destinationNode.lower()))
+        self.addNode(sourceNode)
+        self.addNode(destinationNode)
+        self.edgeSet.add((sourceNode.lower(), destinationNode.lower()))
+        self.adjDict[sourceNode.lower()].append(destinationNode.lower())
 
-    def printGraph(self):
+    def toString(self):
         for n in self.nodes:
             edgeList = ""
-            for s, d in self.edges:
+            for s, d in self.edgeSet:
                 if s == n:
                     edgeList += d + ", "
             print("node: {} edges: {}".format(n, repr(edgeList)))
+    
+    def visualize(self):
+
 
     def initializeDebruijinGraph(self, sequence, k):
         mers = self.getkmerList(sequence, k)
@@ -87,7 +92,7 @@ class DebruijinGraph:
         merged_nodes = []
         for i in self.nodes:
             merged_nodes.append(i)
-        for i in self.edges:
+        for i in self.edgeSet:
             merged_nodes.append(i[1])
 
         while(len(merged_nodes) != 1):
@@ -131,7 +136,7 @@ class DebruijinGraph:
         kmer_list = self.getkmerList(path, self.read_size)
         for i in kmer_list:
             lmer, rmer = self.getLeftRightMers(i)
-            if((lmer,rmer) not in self.edges):
+            if((lmer,rmer) not in self.edgeSet):
                 return False
         return len(path) == len(self.sequence)
 
@@ -151,6 +156,7 @@ def getGraphList(N_THREADS, seq, k):
     mgr = Manager()
     shared_dict = mgr.dict()
     df_size = seq.df.shape[0]
+    # df_size = 100000
     for i in xrange(N_THREADS):
         start, end = findWorkerThreadIndices(i, N_THREADS, df_size)
         thread_arr[i] = Process(target=makeGraphs, args=(i, start, end, k, seq.df, shared_dict))
@@ -180,7 +186,7 @@ def makeGraphs(threadNum, start, end, k, df, shared_dict):
 
 def getGraphList_noParallel(seq, k):
     df_size = seq.df.shape[0]
-    df_size = 10000
+    # df_size = 10000
     graphs = []
     for i in range(df_size):
         s = seq.df['sequence'].iloc[i]
