@@ -39,12 +39,12 @@ class Sequences:
             self.thread_arr[i] = Process(target=self.append_parallel,
                                          args=(i, split_arr[i]))
             self.thread_arr[i].start()
-            logging.info("starting thread %s", repr(i))
+            # logging.info("starting thread %s", repr(i))
 
         # join worker threads
         for i in xrange(self.N_THREADS):
             self.thread_arr[i].join()
-            logging.info("joining thread %s", repr(i))
+            # logging.info("joining thread %s", repr(i))
 
         # merge the dataframes that the worker threads created
         # in a serial manner
