@@ -1,4 +1,5 @@
 import networkx as nx
+import matplotlib.pyplot as plt
 from random import shuffle
 from multiprocessing import Process, Manager
 import logging
@@ -35,8 +36,14 @@ class DebruijinGraph:
                     edgeList += d + ", "
             print("node: {} edges: {}".format(n, repr(edgeList)))
 
-    def visualize(self):
-        pass
+    
+    def visualize(self, filename):
+        g = nx.MultiDiGraph()
+        g.add_nodes_from(self.nodes)
+        for n in self.adjDict:
+            g.add_edges_from(self.adjDict[n])
+        nx.draw(g)
+        plt.savefig(filename)
 
     def initializeDebruijinGraph(self, sequence, k):
         mers = self.getkmerList(sequence, k)

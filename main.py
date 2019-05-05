@@ -17,6 +17,7 @@ if __name__ == "__main__":
     SEQ.logger.info("completed")
     SEQ.logger.info("path is %s", G3.smart_eulerian_path)
 
+<<<<<<< Updated upstream
     S4 = "0011101000"
     G4 = DebruijinGraph(S4, 3)
     SEQ.logger.info("finding the eulerian path of %s using a naive greedy algorithm", S4)
@@ -33,6 +34,14 @@ if __name__ == "__main__":
     graph_list = getGraphList(N_THREADS, SEQ, K)
     # MARK: debug 
     # graph_list = []
+=======
+# threeMerGraphList = getGraphList(N_THREADS, debroin, 3)
+# print(len(threeMerGraphList))
+
+# s3 = "abccde"
+# g3 = DebruijinGraph(s3, 4)
+# g3.visualize("testing.png")
+>>>>>>> Stashed changes
 
     for counter, i in enumerate(graph_list):
         cur_seq = i.sequence.lower()
