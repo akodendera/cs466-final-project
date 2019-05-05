@@ -1,9 +1,7 @@
 from sequences import Sequences
-from debruijingraph import *
+from debruijingraph import DebruijinGraph, getGraphList
 
-if __name__ == "__main__":
-    N_THREADS = 5
-    FILENAME = 'Chelonoidis_abingdonii.ASM359739v1.pep.abinitio.fa'
+def test_naive_smart_eulerian():
     SEQ = Sequences(N_THREADS, FILENAME)
 
     S3 = "abccde"
@@ -17,7 +15,6 @@ if __name__ == "__main__":
     SEQ.logger.info("completed")
     SEQ.logger.info("path is %s", G3.smart_eulerian_path)
 
-<<<<<<< Updated upstream
     S4 = "0011101000"
     G4 = DebruijinGraph(S4, 3)
     SEQ.logger.info("finding the eulerian path of %s using a naive greedy algorithm", S4)
@@ -29,19 +26,24 @@ if __name__ == "__main__":
     SEQ.logger.info("completed")
     SEQ.logger.info("path is %s", G4.smart_eulerian_path)
 
+
+def test_visualize():
+    SEQ = Sequences(N_THREADS, FILENAME)
+    threeMerGraphList = getGraphList(N_THREADS, SEQ, 3)
+    print(len(threeMerGraphList))
+
+    s3 = "abccde"
+    g3 = DebruijinGraph(s3, 4)
+    g3.visualize("testing.png")
+
+
+def test_reconstruct_path():
+    SEQ = Sequences(N_THREADS, FILENAME)
     K = 3
     SEQ.logger.info("build %s-mer graph", K)
     graph_list = getGraphList(N_THREADS, SEQ, K)
     # MARK: debug 
     # graph_list = []
-=======
-# threeMerGraphList = getGraphList(N_THREADS, debroin, 3)
-# print(len(threeMerGraphList))
-
-# s3 = "abccde"
-# g3 = DebruijinGraph(s3, 4)
-# g3.visualize("testing.png")
->>>>>>> Stashed changes
 
     for counter, i in enumerate(graph_list):
         cur_seq = i.sequence.lower()
@@ -56,3 +58,10 @@ if __name__ == "__main__":
             SEQ.logger.error("path is %s", cur_path)
             SEQ.logger.error("the sequence and path differ")
             exit(-1)
+
+
+if __name__ == "__main__":
+    N_THREADS = 5
+    FILENAME = 'Chelonoidis_abingdonii.ASM359739v1.pep.abinitio.fa'
+    # test_naive_smart_eulerian()
+    test_visualize()
