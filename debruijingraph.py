@@ -1,4 +1,4 @@
-# from graphviz import Digraph
+import networkx as nx
 from random import shuffle
 from multiprocessing import Process, Manager
 import logging
@@ -8,30 +8,35 @@ from sequences import Sequences
 class DebruijinGraph:
     def __init__(self, sequence, k):
         self.nodes = set()
-        self.edges = set()  # directed set of tuples (source, destination)
+        self.edgeSet = set()  # directed set of tuples (source, destination)
+        self.adjDict = {}
         self.read_size = k
         self.sequence = sequence
         self.initializeDebruijinGraph(sequence, k)
         self.naive_eulerian_path = None
         self.smart_eulerian_path = None
 
-    def addNode(self, n):
-        self.nodes.add(n.lower())
+    def addNode(self, node):
+        self.nodes.add(node.lower())
+        if node.lower() not in self.adjDict:
+            self.adjDict[node.lower()] = []
 
     def addEdge(self, sourceNode, destinationNode):
-        if sourceNode not in self.nodes:
-            self.addNode(sourceNode)
-        if destinationNode not in self.nodes:
-            self.addNode(destinationNode)
-        self.edges.add((sourceNode.lower(), destinationNode.lower()))
+        self.addNode(sourceNode)
+        self.addNode(destinationNode)
+        self.edgeSet.add((sourceNode.lower(), destinationNode.lower()))
+        self.adjDict[sourceNode.lower()].append(destinationNode.lower())
 
-    def printGraph(self):
+    def toString(self):
         for n in self.nodes:
             edgeList = ""
-            for s, d in self.edges:
+            for s, d in self.edgeSet:
                 if s == n:
                     edgeList += d + ", "
             print("node: {} edges: {}".format(n, repr(edgeList)))
+
+    def visualize(self):
+        pass
 
     def initializeDebruijinGraph(self, sequence, k):
         mers = self.getkmerList(sequence, k)
@@ -55,9 +60,9 @@ class DebruijinGraph:
         max_score = 0
         # print("checking overlap of " + repr(left) + " and " + repr(right))
         # 10 and 11
-        for cur_score in xrange(1, min(len(left), len(right)) + 1):
+        for cur_score in range(1, min(len(left), len(right)) + 1):
             cur_alignment_score = 0
-            for cur_align_index in xrange(cur_score):
+            for cur_align_index in range(cur_score):
                 if(left[len(left) - cur_score + cur_align_index] == right[cur_align_index]):
                     # print("increase overlap")
                     cur_alignment_score += 1
@@ -70,7 +75,7 @@ class DebruijinGraph:
             max_score = max(max_score, cur_alignment_score)
             # print("current max score is " + repr(max_score))
 
-        # for cur_alignment_index in xrange(self.read_size - 2):
+        # for cur_alignment_index in range(self.read_size - 2):
         #     if(left[len(left) - (self.read_size - 2) + cur_alignment_index] == right[cur_alignment_index]):
         #         # print("increase overlap")
         #         max_score += 1
@@ -87,8 +92,9 @@ class DebruijinGraph:
         merged_nodes = []
         for i in self.nodes:
             merged_nodes.append(i)
-        for i in self.edges:
-            merged_nodes.append(i[1])
+        for i in self.adjDict:
+            for j in self.adjDict[i]:
+                merged_nodes.append(j)
 
         while(len(merged_nodes) != 1):
             shuffle(merged_nodes)
@@ -131,7 +137,7 @@ class DebruijinGraph:
         kmer_list = self.getkmerList(path, self.read_size)
         for i in kmer_list:
             lmer, rmer = self.getLeftRightMers(i)
-            if((lmer,rmer) not in self.edges):
+            if((lmer,rmer) not in self.edgeSet):
                 return False
         return len(path) == len(self.sequence)
 
@@ -141,11 +147,9 @@ class DebruijinGraph:
         path_edges = dict()
         for i in self.nodes:
             path_nodes.append(i)
-        for i in self.edges:
-            if(i[0] in path_edges):
-                path_edges[i[0]].append(i[1])
-            else:
-                path_edges[i[0]] = [i[1]]
+        for i in self.adjDict:
+            if(len(self.adjDict[i]) > 0):
+                path_edges[i] = self.adjDict[i]
 
         starting_vertex_candidate = []
         for i in path_nodes:
@@ -174,8 +178,9 @@ class DebruijinGraph:
             if(current_vertex in path_edges):
                 not_visited.append(current_vertex)
                 new_vertex = path_edges[current_vertex].pop()
-                if(current_vertex in path_edges and len(path_edges[current_vertex]) == 0):
-                    path_edges.pop(current_vertex)
+                if(current_vertex in path_edges):
+                    if(len(path_edges[current_vertex]) == 0):
+                        path_edges.pop(current_vertex)
                 current_vertex = new_vertex
             else:
                 current_path.append(current_vertex)
@@ -187,6 +192,7 @@ class DebruijinGraph:
         merged_node += current_path[0][1:]
         self.smart_eulerian_path = merged_node
 
+
 def getGraphList(N_THREADS, seq, k):
     FORMAT = "%(asctime)s: %(message)s"
     logging.basicConfig(format=FORMAT, level=logging.INFO, datefmt="%H:%M:%S")
@@ -197,36 +203,41 @@ def getGraphList(N_THREADS, seq, k):
     mgr = Manager()
     shared_dict = mgr.dict()
     df_size = seq.df.shape[0]
-    for i in xrange(N_THREADS):
+    # df_size = 100000
+    for i in range(N_THREADS):
         start, end = findWorkerThreadIndices(i, N_THREADS, df_size)
         thread_arr[i] = Process(target=makeGraphs, args=(i, start, end, k, seq.df, shared_dict))
         thread_arr[i].start()
         logging.info("starting thread %s", repr(i))
-    for i in xrange(N_THREADS):
+    for i in range(N_THREADS):
         thread_arr[i].join()
         logging.info("joining thread %s", repr(i))
-    for i in xrange(N_THREADS):
+    for i in range(N_THREADS):
         graphs.extend(shared_dict[i])
     return graphs
 
+
 def findWorkerThreadIndices(threadNum, N_THREADS, dfSize):
-    start = (dfSize/N_THREADS) * threadNum
-    end = (dfSize/N_THREADS) * threadNum + (dfSize/N_THREADS)
+    start = (dfSize // N_THREADS) * threadNum
+    end = (dfSize // N_THREADS) * threadNum + (dfSize // N_THREADS)
     if threadNum + 1 == N_THREADS:
         end = dfSize
     return start, end
 
+
 def makeGraphs(threadNum, start, end, k, df, shared_dict):
     graphList = []
     for i in range(start, end):
-        s = df.iloc[i]
+        s = df.iloc[i]['sequence']
         graphList.append(DebruijinGraph(s, k))
+    if(graphList == None):
+        logging.info("IS NONE OH NO AHH")
     shared_dict[threadNum] = graphList 
 
 
 def getGraphList_noParallel(seq, k):
     df_size = seq.df.shape[0]
-    df_size = 10000
+    # df_size = 10000
     graphs = []
     for i in range(df_size):
         s = seq.df['sequence'].iloc[i]

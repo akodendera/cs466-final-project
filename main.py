@@ -2,7 +2,7 @@ from sequences import Sequences
 from debruijingraph import *
 
 if __name__ == "__main__":
-    N_THREADS = 20
+    N_THREADS = 5
     FILENAME = 'Chelonoidis_abingdonii.ASM359739v1.pep.abinitio.fa'
     SEQ = Sequences(N_THREADS, FILENAME)
 

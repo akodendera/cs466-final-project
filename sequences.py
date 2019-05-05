@@ -36,14 +36,14 @@ class Sequences:
         split_arr = self.split_into_chunks()
         self.logger.info("split into %s", repr(len(split_arr)))
         # call worker threads
-        for i in xrange(self.N_THREADS):
+        for i in range(self.N_THREADS):
             self.thread_arr[i] = Process(target=self.append_parallel,
                                          args=(i, split_arr[i]))
             self.thread_arr[i].start()
             # self.logger.info("starting thread %s", repr(i))
 
         # join worker threads
-        for i in xrange(self.N_THREADS):
+        for i in range(self.N_THREADS):
             self.thread_arr[i].join()
             # self.logger.info("joining thread %s", repr(i))
 
@@ -78,8 +78,9 @@ class Sequences:
         arr_len = sum(1 for _ in arr)
 
         arr = SeqIO.parse(open(self.FILENAME), 'fasta')
+
         for i, v in enumerate(arr):
-            if(i != 0 and i % (arr_len / self.N_THREADS) == 0):
+            if(i != 0 and i % (arr_len // self.N_THREADS) == 0):
                 split_arr.append(current_arr)
                 current_arr = [v]
                 split_arr_index += 1
