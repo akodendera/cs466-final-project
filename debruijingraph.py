@@ -28,21 +28,23 @@ class DebruijinGraph:
         self.edgeSet.add((sourceNode.lower(), destinationNode.lower()))
         self.adjDict[sourceNode.lower()].append(destinationNode.lower())
 
-    def toString(self):
-        for n in self.nodes:
-            edgeList = ""
-            for s, d in self.edgeSet:
-                if s == n:
-                    edgeList += d + ", "
-            print("node: {} edges: {}".format(n, repr(edgeList)))
+    def printGraph(self):
+        # for n in self.nodes:
+        #     edgeList = ""
+        #     for s, d in self.edgeSet:
+        #         if s == n:
+        #             edgeList += d + ", "
+        #     print("node: {} edges: {}".format(n, repr(edgeList)))
+        print(self.adjDict)
 
     
     def visualize(self, filename):
         g = nx.MultiDiGraph()
         g.add_nodes_from(self.nodes)
         for n in self.adjDict:
-            g.add_edges_from(self.adjDict[n])
-        nx.draw(g)
+            for e in self.adjDict[n]:
+                g.add_edge(n, e)
+        nx.draw(g, with_labels=True)
         plt.savefig(filename)
 
     def initializeDebruijinGraph(self, sequence, k):
@@ -210,9 +212,10 @@ def getGraphList(N_THREADS, seq, k):
     mgr = Manager()
     shared_dict = mgr.dict()
     df_size = seq.df.shape[0]
-    # df_size = 100000
+    # df_size = 10000
     for i in range(N_THREADS):
         start, end = findWorkerThreadIndices(i, N_THREADS, df_size)
+        logging.info("thread start: %s. thread end: %s", start, end)
         thread_arr[i] = Process(target=makeGraphs, args=(i, start, end, k, seq.df, shared_dict))
         thread_arr[i].start()
         logging.info("starting thread %s", repr(i))

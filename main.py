@@ -1,5 +1,5 @@
 from sequences import Sequences
-from debruijingraph import DebruijinGraph, getGraphList
+from debruijingraph import DebruijinGraph, getGraphList, getGraphList_noParallel
 
 def test_naive_smart_eulerian():
     SEQ = Sequences(N_THREADS, FILENAME)
@@ -30,11 +30,13 @@ def test_naive_smart_eulerian():
 def test_visualize():
     SEQ = Sequences(N_THREADS, FILENAME)
     threeMerGraphList = getGraphList(N_THREADS, SEQ, 3)
+    # threeMerGraphList = getGraphList_noParallel(SEQ, 3)
     print(len(threeMerGraphList))
 
-    s3 = "abccde"
-    g3 = DebruijinGraph(s3, 4)
-    g3.visualize("testing.png")
+    # s3 = "abcccde"
+    # g3 = DebruijinGraph(s3, 4)
+    # g3.printGraph()
+    # g3.visualize("testing.png")
 
 
 def test_reconstruct_path():
@@ -61,7 +63,8 @@ def test_reconstruct_path():
 
 
 if __name__ == "__main__":
-    N_THREADS = 5
+    N_THREADS = 8
     FILENAME = 'Chelonoidis_abingdonii.ASM359739v1.pep.abinitio.fa'
-    # test_naive_smart_eulerian()
+    test_naive_smart_eulerian()
     test_visualize()
+    test_reconstruct_path
