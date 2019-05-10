@@ -10,5 +10,5 @@ Need python3.6 to run. We have multi-processed program for the reading of the da
 
 The following are the python package dependencies you will need to run this: networkx, matplotlib, random, multiprocessing, , logging, pprint, Bio, and pandas
 
-###To run ###
+To run:
 We have written a few testing functions in main.py. just run "python main.py" to run these
